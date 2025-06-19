@@ -9,7 +9,7 @@ services:
     volumes:
       - ./backend/:/app/ # Mount your local backend code into the container
     env_file:
-      - ./.env # Load environment variables from a .env file (optional, but good practice)
+      - .env # Load environment variables from a .env file (optional, but good practice)
     depends_on:
       - db # Ensure the database service starts before the web service
     entrypoint: ["/app/entrypoint.sh"]

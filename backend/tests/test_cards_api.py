@@ -35,13 +35,13 @@ class TestCardAPI:
         response = auth_client.post(self.endpoint, data)
         assert response.status_code == 400
 
-    def test_create_card_provider_error_explicit(self, auth_client):
+    def test_create_card_provider_error(self, auth_client):
         """Tests that creating a card with external_id='provider_error' simulates a provider error and returns a 502 Bad Gateway response."""
         data = {"color": "black", "external_id": "provider_error"}
         response = auth_client.post(self.endpoint, data)
         assert response.status_code == 502
 
-    def test_create_card_provider_error_explicit(self, auth_client):
+    def test_create_card_invalid_user_id(self, auth_client):
         """Tests that creating a card with external_id='invalid_user_id' simulates a provider error and returns a 502 Bad Gateway response."""
         data = {"color": "black", "external_id": "invalid_user_id"}
         response = auth_client.post(self.endpoint, data)

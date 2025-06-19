@@ -47,13 +47,13 @@ class TestCardService:
         with pytest.raises(ValueError):
             CardService.create_card(user, "black", external_id="something_else")
 
-    def test_create_card_provider_error_provider_error(self, mocker, user):
+    def test_create_card_provider_error(self, mocker, user):
         """Raises RuntimeError if provider_error external_id is used."""
         mocker.patch("providers.clients.bank_provider.BankProviderClient.create_card", side_effect=Exception("Provider error"))
         with pytest.raises(RuntimeError):
             CardService.create_card(user, "black", external_id="provider_error")
 
-    def test_create_card_provider_error_invalid_user_id(self, mocker, user):
+    def test_create_card_invalid_user_id(self, mocker, user):
         """Raises RuntimeError if invalid_user_id external_id is used."""
         mocker.patch("providers.clients.bank_provider.BankProviderClient.create_card", side_effect=Exception("User not found"))
         with pytest.raises(RuntimeError):

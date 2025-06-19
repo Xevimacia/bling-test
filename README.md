@@ -49,9 +49,16 @@ cd test_senior_backend
 2. **(Optional but Recommended) Create a `.env` file:**  
 If you don't already have one, create a file named `.env` in the root of this repository (next to `docker-compose.yml`). You can use the following default values, or change them if you prefer:  
 ```env  
+# Database Configuration
 DB_NAME=mydjangodb  
 DB_USER=user  
 DB_PASSWORD=password  
+
+# Superuser Configuration (for Django Admin)
+DJANGO_SUPERUSER_USERNAME=admin
+DJANGO_SUPERUSER_EMAIL=admin@example.com
+DJANGO_SUPERUSER_PASSWORD=admin123
+DJANGO_SUPERUSER_EXTERNAL_ID=test_user_id_123  # Used for testing card creation
 ```  
   
 3. **Build and run the Docker containers:**  
