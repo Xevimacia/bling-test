@@ -3,3 +3,5 @@ psycopg2-binary # For PostgreSQL connectivity
 djangorestframework==3.16.0
 djangorestframework-simplejwt==5.5.0
 requests==2.32.3
+drf-yasg
+python-dateutil

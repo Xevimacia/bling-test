@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from .models import Card
 from .serializers import CardSerializer
 from .services import CardService
+from drf_yasg.utils import swagger_auto_schema
 
 class CardViewSet(viewsets.ViewSet):
     """API endpoint that allows cards to be viewed or edited."""
@@ -14,6 +15,7 @@ class CardViewSet(viewsets.ViewSet):
         serializer = CardSerializer(cards, many=True)
         return Response(serializer.data)
 
+    @swagger_auto_schema(request_body=CardSerializer)
     def create(self, request):
         """Create a new card for the authenticated user using the service layer."""
         serializer = CardSerializer(data=request.data)
@@ -21,8 +23,10 @@ class CardViewSet(viewsets.ViewSet):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         color = serializer.validated_data.get('color')
+        external_id = serializer.validated_data.get('external_id')
+
         try:
-            card = CardService.create_card(request.user, color)
+            card = CardService.create_card(request.user, color, external_id)
         except ValueError as ve:
             return Response({'detail': str(ve)}, status=status.HTTP_400_BAD_REQUEST)
         except RuntimeError as re:

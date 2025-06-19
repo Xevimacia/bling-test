@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-y&rw4%_p*-znsjrr=e=-w!%=kw-tu9%2dv4jl+a3%0rs7w3k0m
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0']
 
 
 # Application definition
@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'cards',
     'users',
+    'drf_yasg',
 ]
 
 # Custom User model

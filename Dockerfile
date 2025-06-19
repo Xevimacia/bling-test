@@ -25,6 +25,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the entire backend project into the container
 COPY backend/ /app/
 
+# Copy entrypoint script and make it executable
+COPY backend/entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
+
 # Expose the port that Gunicorn/Django will run on
 EXPOSE 8000
 
