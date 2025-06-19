@@ -1,1 +1,5 @@
-- Improved error handling in `CardViewSet.retrieve` (cards/views.py): now returns safe error messages and checks card ownership.
+- Improved error handling in `CardViewSet.retrieve` (cards/views.py): now returns safe error messages and prevents information leakage, for error handling and safe API rules. 
+- Provider client renamed to `BankProviderClient` for clarity. 
+- Refactored `CardViewSet.list` and `retrieve` to use `CardService` for business logic, keeping views thin and for separation of concerns. 
+- Scaffolded `CardService.create_card` to validate input, call the provider, and handle errors safely (no DB save yet). 
+- Implemented robust card creation: `CardViewSet.create` now validates input, delegates to `CardService.create_card` (which handles provider integration, transactional DB save, and error handling), and returns the created card. This ensures safe APIs and separation of concerns. 

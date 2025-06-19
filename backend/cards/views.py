@@ -15,8 +15,24 @@ class CardViewSet(viewsets.ViewSet):
         return Response(serializer.data)
 
     def create(self, request):
-        """Create a new card"""
-        return Response(status=status.HTTP_501_NOT_IMPLEMENTED)
+        """Create a new card for the authenticated user using the service layer."""
+        serializer = CardSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        color = serializer.validated_data.get('color')
+        try:
+            card = CardService.create_card(request.user, color)
+        except ValueError as ve:
+            return Response({'detail': str(ve)}, status=status.HTTP_400_BAD_REQUEST)
+        except RuntimeError as re:
+            return Response({'detail': str(re)}, status=status.HTTP_502_BAD_GATEWAY)
+        except Exception as exc:
+            # logger.error(f"Unexpected error during card creation: {exc}")
+            return Response({'detail': 'An unexpected error occurred.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        output_serializer = CardSerializer(card)
+        return Response(output_serializer.data, status=status.HTTP_201_CREATED)
 
     def retrieve(self, request, pk=None):
         """Get a specific card belonging to the authenticated user using the service layer. Ensures ownership and safe error handling."""

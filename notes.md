@@ -1,3 +1,0 @@
-- Improved error handling in `CardViewSet.retrieve` (cards/views.py): now returns safe error messages and prevents information leakage, for error handling and safe API rules. 
-- Provider client renamed to `BankProviderClient` for clarity. 
-- Refactored `CardViewSet.list` and `retrieve` to use `CardService` for business logic, keeping views thin and for separation of concerns. 
