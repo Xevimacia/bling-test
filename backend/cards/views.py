@@ -2,14 +2,15 @@ from rest_framework import viewsets, status, permissions
 from rest_framework.response import Response
 from .models import Card
 from .serializers import CardSerializer
+from .services import CardService
 
 class CardViewSet(viewsets.ViewSet):
     """API endpoint that allows cards to be viewed or edited."""
     permission_classes = [permissions.IsAuthenticated]
 
     def list(self, request):
-        """Get all cards for the authenticated user"""
-        cards = Card.objects.filter(user=request.user)
+        """Get all cards for the authenticated user using the service layer."""
+        cards = CardService.list_user_cards(request.user)
         serializer = CardSerializer(cards, many=True)
         return Response(serializer.data)
 
@@ -18,9 +19,9 @@ class CardViewSet(viewsets.ViewSet):
         return Response(status=status.HTTP_501_NOT_IMPLEMENTED)
 
     def retrieve(self, request, pk=None):
-        """Get a specific card belonging to the authenticated user. Ensures ownership and safe error handling."""
+        """Get a specific card belonging to the authenticated user using the service layer. Ensures ownership and safe error handling."""
         try:
-            card = Card.objects.get(pk=pk, user=request.user)
+            card = CardService.retrieve_user_card(request.user, pk)
         except Card.DoesNotExist:
             return Response({'detail': 'Card not found.'}, status=status.HTTP_404_NOT_FOUND)
         except Exception as exc:
