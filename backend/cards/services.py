@@ -46,6 +46,10 @@ class CardService:
                 dt = timezone.make_aware(dt)
             expiration_date = dt
 
+        # Enforce that 'status' is present in provider response
+        if "status" not in provider_response:
+            raise RuntimeError("Provider did not return status")
+
         # Transactional DB save
         try:
             with transaction.atomic():
@@ -54,7 +58,7 @@ class CardService:
                     color=color,
                     external_id=provider_response.get("id"),
                     expiration_date=expiration_date,
-                    status=provider_response.get("status", Card._meta.get_field('status').get_default()),
+                    status=provider_response["status"],
                 )
         except Exception as exc:
             # logger.error(f"Database error during card creation: {exc}")

@@ -35,3 +35,5 @@ EXPOSE 8000
 # Command to run the Django development server
 # For production, you'd use Gunicorn or uWSGI
 CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+
+ENV DJANGO_SETTINGS_MODULE=backend.settings

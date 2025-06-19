@@ -5,3 +5,7 @@ djangorestframework-simplejwt==5.5.0
 requests==2.32.3
 drf-yasg
 python-dateutil
+pytest
+pytest-django
+factory_boy
+pytest-mock
