@@ -2,7 +2,7 @@ import requests
 from datetime import datetime
 
 
-class BanBankProviderClient:
+class BankProviderClient:
     base_url = "https://bankprovider.com/"
 
     def create_card(self, user_external_id: str, color: str) -> dict:

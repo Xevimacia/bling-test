@@ -96,3 +96,6 @@ reports/*
 
 # Thumbnails
 ._*
+
+.cursor/
+extended_notes.md

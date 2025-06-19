@@ -1,6 +1,5 @@
 from rest_framework import viewsets, status, permissions
 from rest_framework.response import Response
-from django.shortcuts import get_object_or_404
 from .models import Card
 from .serializers import CardSerializer
 
@@ -19,8 +18,15 @@ class CardViewSet(viewsets.ViewSet):
         return Response(status=status.HTTP_501_NOT_IMPLEMENTED)
 
     def retrieve(self, request, pk=None):
-        """Get a specific card"""
-        card = get_object_or_404(Card, pk=pk)
+        """Get a specific card belonging to the authenticated user. Ensures ownership and safe error handling."""
+        try:
+            card = Card.objects.get(pk=pk, user=request.user)
+        except Card.DoesNotExist:
+            return Response({'detail': 'Card not found.'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as exc:
+            # Log the error internally (placeholder for actual logging)
+            # logger.error(f"Error retrieving card: {exc}")
+            return Response({'detail': 'An unexpected error occurred.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         serializer = CardSerializer(card)
         return Response(serializer.data)
 

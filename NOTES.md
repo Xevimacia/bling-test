@@ -1,0 +1,1 @@
+- Improved error handling in `CardViewSet.retrieve` (cards/views.py): now returns safe error messages and checks card ownership.
