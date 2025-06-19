@@ -57,8 +57,14 @@ DB_PASSWORD=password
 # Superuser Configuration (for Django Admin)
 DJANGO_SUPERUSER_USERNAME=admin
 DJANGO_SUPERUSER_EMAIL=admin@example.com
-DJANGO_SUPERUSER_PASSWORD=admin123
-DJANGO_SUPERUSER_EXTERNAL_ID=test_user_id_123  # Used for testing card creation
+DJANGO_SUPERUSER_PASSWORD=supersecret
+DJANGO_SUPERUSER_EXTERNAL_ID=super_user_id_123
+
+# Django secret key (use a strong, random value in production!)
+DJANGO_SECRET_KEY=django-insecure-y&rw4%_p*-znsjrr=e=-w!%=kw-tu9%2dv4jl+a3%0rs7w3k0m
+
+# Debug mode (set to False in production)
+DJANGO_DEBUG=True
 ```  
   
 3. **Build and run the Docker containers:**  
@@ -66,9 +72,14 @@ This command will build the Docker images (if not already built) and start the D
 ```bash  
 docker compose build  
 docker compose up -d  
-```  
+```
+
+To view the logs:
+```bash
+docker compose logs -f
+```
   
-4. **Run database migrations:**  
+4. **Run database migrations (Optional as it is now automated with Docker):**  
 Once the containers are running, you need to apply the database migrations.  
 ```bash  
 docker compose exec web python manage.py migrate  
@@ -76,14 +87,14 @@ docker compose exec web python manage.py migrate
 * `docker compose exec web`: Executes a command inside the `web` container.  
 * `python manage.py migrate`: Standard Django migration command.  
   
-5. **Create a superuser (optional, for accessing Django Admin):**  
+5. **Create a superuser (optional now automated with Docker, for accessing Django Admin):**  
 If your task requires interacting with the Django admin, you might want to create a superuser.  
 ```bash  
 docker compose exec web python manage.py createsuperuser  
 ```  
 Follow the prompts to set up a username, email, and password.  
   
-6. **Access the application:**  
+6. **Access the application (optional now automated with Docker):**  
 Run the following command to start the Django development server:  
 ```bash  
 docker compose exec web python manage.py runserver  
@@ -94,39 +105,84 @@ The Django application should now be running and accessible in your web browser 
 If you created a superuser, the Django admin will be at [http://localhost:8000/admin/](http://localhost:8000/admin/).  
   
 7. **Run tests:**  
-You can run the Django test suite with the following command:  
+You can run the test suite with the following command:  
 ```bash  
-docker compose exec web python manage.py test  
+docker compose exec web pytest
 ```  
+This will run all tests with pytest. You can also:
+- Run tests with coverage report: `docker compose exec web pytest --cov=backend`
+- Run specific test file: `docker compose exec web pytest tests/test_cards_api.py`
+- Run tests with detailed output: `docker compose exec web pytest -v`
   
 ## Shutting Down  
   
-When you are finished, you can stop and remove the containers:  
-```bash  
-docker compose down  
-  
+When you are finished, you can use the following commands for different levels of cleanup:
 
--   docker compose down: Stops the running containers and removes them, along with their networks. It does not remove the named volumes (like db_data), so your database data will persist. If you want to remove volumes too, add -v or --volumes.
-```    
+```bash
+# Stop and remove containers only
+docker compose down
+
+# Stop and remove containers and volumes
+docker compose down -v
+
+# Complete cleanup (containers, volumes, and images)
+docker compose down -v --rmi all
+```
+
+The different cleanup options do the following:
+- `docker compose down`: Stops and removes containers and networks
+- `docker compose down -v`: Also removes all volumes (database data)
+- `docker compose down -v --rmi all`: Removes everything including downloaded/built images
+
+Choose the appropriate cleanup level based on your needs. For a complete project removal, use the last command.
 
 ## The Task
 
-Implement the functionality to create a debit card.
-The scenario is the following:
+✅ Implementation Complete! 
 
--   Suppose the user has been already created
--   The user makes a request to create a debit card selecting only the card color. 
--   The backend calls an external provider (already mocked) to create the debit card in the provider system.
--   The backend creates the debit card in the database.
--   The backend returns the debit card to the client. 
-    
-Your solution should demonstrate a very strong understanding of:
-1.  Clean Architecture / Domain Separation: Structure this code into logical layers.
-2.  Robust Error Handling: Handle various failure scenarios, especially those originating from the external provider.
-3.  Data Consistency: Ensure that the database state remains consistent even if the external provider call fails or vice-versa.
-4.  Testability: Test your implementation using unit tests.
-    
+The task was to implement functionality to create a debit card with the following scenario:
+
+-   User has been already created (prerequisite)
+-   User makes a request to create a debit card by selecting the card color
+-   Backend calls external provider (mocked) to create the debit card
+-   Backend creates the debit card in the database
+-   Backend returns the debit card details to the client
+
+### Implementation Checklist
+
+All requirements have been successfully implemented:
+
+- [x] **Clean Architecture / Domain Separation**
+  - Implemented clear separation between API, domain logic, and data layers
+  - Provider integration isolated in dedicated module
+  - Service layer handling business logic
+
+- [x] **Robust Error Handling**
+  - Provider errors properly handled and mapped
+  - Input validation at API level
+  - Appropriate HTTP status codes and error messages
+  - Graceful handling of unexpected scenarios
+
+- [x] **Data Consistency**
+  - Transaction management for database operations
+  - Proper error handling for provider integration
+  - Consistent state maintained between provider and local database
+
+- [x] **Testing**
+  - Comprehensive test suite implemented
+  - Coverage for happy path and error scenarios
+  - Provider integration tests
+  - Input validation tests
+  - API endpoint tests
+
+### Additional Features
+- [x] Swagger UI documentation
+- [x] Comprehensive error responses
+- [x] Strict contract enforcement with provider
+- [x] Timezone-aware date handling
+
+For detailed implementation notes, architecture decisions, and technical documentation, please refer to [NOTES.md](NOTES.md).
 
 ## Submission
 
-Please push your solution to a new private GitHub repository or a compressed folder and share it with us. Include any relevant notes or assumptions in your README.md or a separate NOTES.md file.
+Please push your solution to a new private GitHub repository or a compressed folder and share it with us. Include any relevant notes or assumptions in your README.md or a separate [NOTES.md](NOTES.md) file.
