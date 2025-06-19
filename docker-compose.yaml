@@ -1,0 +1,30 @@
+
+services:
+  web:
+    build:
+      context: . # Build context is the current directory where docker-compose.yml is
+      dockerfile: Dockerfile # Use the Dockerfile in the current directory
+    container_name: django_web
+    ports:
+      - "8000:8000" # Map host port 8000 to container port 8000
+    volumes:
+      - ./backend/:/app/ # Mount your local backend code into the container
+    env_file:
+      - ./.env # Load environment variables from a .env file (optional, but good practice)
+    depends_on:
+      - db # Ensure the database service starts before the web service
+    command: sleep 1d 
+  db:
+    image: postgres:15-alpine # Use a lightweight PostgreSQL image
+    container_name: django_db
+    ports:
+      - "5432:5432" # Optional: Expose DB port if you want to connect from local tools
+    environment:
+      POSTGRES_DB: ${DB_NAME:-mydjangodb} # Use variable from .env or default
+      POSTGRES_USER: ${DB_USER:-user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-password}
+    volumes:
+      - db_data:/var/lib/postgresql/data/ # Persist database data across container restarts
+
+volumes:
+  db_data: # Define the named volume for database persistence
