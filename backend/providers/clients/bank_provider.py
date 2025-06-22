@@ -1,5 +1,5 @@
 import requests
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 class BankProviderClient:
@@ -36,8 +36,9 @@ class BankProviderClient:
 
         # Simulate successful response
         provider_color = "COLOR_1" if color == "pink" else "COLOR_2"
+        future_date = datetime.now() + timedelta(days=365 * 2)  # Simulate a 2-year expiration
         return {
-            "expiration_date": datetime.now().isoformat(),
+            "expiration_date": future_date.isoformat(),
             "id": f"prov_card_{user_external_id}_{color}_{datetime.now().timestamp()}",
             "color": provider_color,
             "status": "ORDERED"

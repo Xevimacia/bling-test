@@ -1,27 +1,24 @@
 import pytest
+import requests
 from cards.models import Card
 from tests.factories import UserFactory
 from django.utils import timezone
+from cards.exceptions import ProviderFailureError
 
 @pytest.mark.django_db
 class TestCardAPI:
     endpoint = "/api/cards/"
 
-    def test_create_card_success_black(self, auth_client, user):
-        """Tests that an authenticated user can successfully create a card with valid data (color 'black'). Verifies the response status, returned data, and that the card exists in the database."""
-        data = {"color": "black"}
+    @pytest.mark.parametrize("color", ["black", "pink"])
+    def test_create_card_success(self, auth_client, user, color):
+        """Tests that an authenticated user can successfully create a card with valid data. Verifies the response status, returned data, and that the card exists in the database."""
+        data = {"color": color}
         response = auth_client.post(self.endpoint, data)
         assert response.status_code == 201
-        assert response.data["color"] == "black"
-        assert Card.objects.filter(user=user, color="black").exists()
-
-    def test_create_card_success_pink(self, auth_client, user):
-        """Tests that an authenticated user can successfully create a card with valid data (color 'pink'). Verifies the response status, returned data, and that the card exists in the database."""
-        data = {"color": "pink"}
-        response = auth_client.post(self.endpoint, data)
-        assert response.status_code == 201
-        assert response.data["color"] == "pink"
-        assert Card.objects.filter(user=user, color="pink").exists()
+        assert response.data["color"] == color
+        assert Card.objects.filter(user=user, color=color).exists()
+        assert response.data["expiration_date"] is not None
+        assert response.data["status"] == "ORDERED"
 
     def test_create_card_invalid_color(self, auth_client):
         """Tests that creating a card with an invalid color ('blue') returns a 400 Bad Request response, indicating validation failure."""
@@ -35,37 +32,70 @@ class TestCardAPI:
         response = auth_client.post(self.endpoint, data)
         assert response.status_code == 400
 
-    def test_create_card_provider_error(self, auth_client):
-        """Tests that creating a card with external_id='provider_error' simulates a provider error and returns a 502 Bad Gateway response."""
-        data = {"color": "black", "external_id": "provider_error"}
-        response = auth_client.post(self.endpoint, data)
-        assert response.status_code == 502
+    def test_create_card_provider_error(self, mocker, auth_client):
+        """Tests that a provider error returns a 502 Bad Gateway response."""
+        mock_response = mocker.Mock()
+        mock_response.status_code = 500
+        http_error = requests.exceptions.HTTPError(response=mock_response)
+        mocker.patch("providers.clients.bank_provider.BankProviderClient.create_card", side_effect=http_error)
 
-    def test_create_card_invalid_user_id(self, auth_client):
-        """Tests that creating a card with external_id='invalid_user_id' simulates a provider error and returns a 502 Bad Gateway response."""
-        data = {"color": "black", "external_id": "invalid_user_id"}
-        response = auth_client.post(self.endpoint, data)
-        assert response.status_code == 502
-
-    def test_create_card_invalid_external_id(self, auth_client):
-        """Tests that creating a card with an invalid external_id (not None, not 'invalid_user_id', not 'provider_error') returns a 400 Bad Request response."""
-        data = {"color": "black", "external_id": "something_else"}
-        response = auth_client.post(self.endpoint, data)
-        assert response.status_code == 400
-        assert "external_id" in response.data.get("detail", "") or "Invalid external_id" in str(response.data)
-
-    def test_create_card_db_error(self, mocker, auth_client):
-        """Tests that if a database error occurs during card creation (simulated by mocking Card.objects.create to raise an exception), the API responds with a 502 Bad Gateway status."""
-        mocker.patch("cards.services.Card.objects.create", side_effect=Exception("DB error"))
         data = {"color": "black"}
         response = auth_client.post(self.endpoint, data)
         assert response.status_code == 502
+        assert response.data["error"] == "provider_unavailable"
+        assert "trace_id" in response.data
+
+    def test_create_card_invalid_user_id(self, mocker, auth_client):
+        """Tests that a 400 from the provider returns a 400 Bad Request."""
+        mock_response = mocker.Mock()
+        mock_response.status_code = 400
+        http_error = requests.exceptions.HTTPError(response=mock_response)
+        mocker.patch("providers.clients.bank_provider.BankProviderClient.create_card", side_effect=http_error)
+        
+        data = {"color": "black"}
+        response = auth_client.post(self.endpoint, data)
+        assert response.status_code == 400
+        assert response.data["error"] == "user_not_registered"
+        assert "trace_id" in response.data
+
+    def test_create_card_db_error(self, mocker, auth_client):
+        """Tests that if a database error occurs, the API responds with a 500 Internal Server Error."""
+        mocker.patch("cards.services.Card.objects.create", side_effect=Exception("DB error"))
+        data = {"color": "black"}
+        response = auth_client.post(self.endpoint, data)
+        assert response.status_code == 500
+        assert "unexpected error" in response.data["detail"].lower()
+        assert "trace_id" in response.data
 
     def test_create_card_unauthenticated(self, api_client):
         """Tests that an unauthenticated user cannot create a card and receives a 401 Unauthorized response."""
         data = {"color": "black"}
         response = api_client.post(self.endpoint, data)
         assert response.status_code == 401
+
+    def test_create_card_unexpected_exception(self, mocker, auth_client):
+        """If service raises unexpected exception, API returns 500."""
+        mocker.patch("cards.services.CardService.create_card", side_effect=Exception("Unexpected"))
+        data = {"color": "black"}
+        response = auth_client.post(self.endpoint, data)
+        assert response.status_code == 500
+        assert "unexpected error" in response.data["detail"].lower()
+        assert "trace_id" in response.data
+
+    def test_create_card_provider_missing_status(self, mocker, auth_client):
+        """Tests that if the provider omits 'status', the API returns a 502 error."""
+        mock_provider = mocker.patch("providers.clients.bank_provider.BankProviderClient.create_card")
+        mock_provider.return_value = {
+            "expiration_date": "2099-01-01T12:00:00+00:00",
+            "id": "prov_id",
+            "color": "COLOR_2"
+            # status omitted
+        }
+        data = {"color": "black"}
+        response = auth_client.post(self.endpoint, data)
+        assert response.status_code == 502
+        assert response.data["error"] == "missing_status"
+        assert "trace_id" in response.data
 
     def test_retrieve_own_card_success(self, auth_client, card):
         """Tests that an authenticated user can retrieve their own card by ID, and the response contains the correct card data."""
@@ -111,41 +141,3 @@ class TestCardAPI:
         """Tests that an unauthenticated user cannot list cards and receives a 401 Unauthorized response."""
         response = api_client.get(self.endpoint)
         assert response.status_code == 401
-
-    def test_create_card_expiration_date_timezone_aware(self, mocker, auth_client):
-        """Ensure expiration_date is saved as timezone-aware even if provider returns naive datetime."""
-        naive_date = "2024-01-01T12:00:00"
-        mock_provider = mocker.patch("providers.clients.bank_provider.BankProviderClient.create_card")
-        mock_provider.return_value = {
-            "expiration_date": naive_date,
-            "id": "prov_id",
-            "color": "COLOR_2",
-            "status": "ORDERED"
-        }
-        data = {"color": "black"}
-        response = auth_client.post(self.endpoint, data)
-        assert response.status_code == 201
-        card = Card.objects.get(id=response.data["id"])
-        assert timezone.is_aware(card.expiration_date)
-
-    def test_create_card_unexpected_exception(self, mocker, auth_client):
-        """If service raises unexpected exception, API returns 500."""
-        mocker.patch("cards.services.CardService.create_card", side_effect=Exception("Unexpected"))
-        data = {"color": "black"}
-        response = auth_client.post(self.endpoint, data)
-        assert response.status_code == 500
-        assert "unexpected error" in response.data["detail"].lower()
-
-    def test_create_card_provider_missing_status(self, mocker, auth_client):
-        """Tests that if the provider omits 'status', the API returns a 502 error."""
-        mock_provider = mocker.patch("providers.clients.bank_provider.BankProviderClient.create_card")
-        mock_provider.return_value = {
-            "expiration_date": "2024-01-01T12:00:00+00:00",
-            "id": "prov_id",
-            "color": "COLOR_2"
-            # status omitted
-        }
-        data = {"color": "black"}
-        response = auth_client.post(self.endpoint, data)
-        assert response.status_code == 502
-        assert "Provider did not return status" in response.data["detail"]

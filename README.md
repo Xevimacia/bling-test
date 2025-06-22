@@ -79,7 +79,7 @@ To view the logs:
 docker compose logs -f
 ```
   
-4. **Run database migrations (Optional as it is now automated with Docker):**  
+4. **(OPTIONAL) Run database migrations (Optional as it is now automated with Docker):**  
 Once the containers are running, you need to apply the database migrations.  
 ```bash  
 docker compose exec web python manage.py migrate  
@@ -87,22 +87,22 @@ docker compose exec web python manage.py migrate
 * `docker compose exec web`: Executes a command inside the `web` container.  
 * `python manage.py migrate`: Standard Django migration command.  
   
-5. **Create a superuser (optional now automated with Docker, for accessing Django Admin):**  
+5. **(OPTIONAL) Create a superuser (optional now automated with Docker, for accessing Django Admin):**  
 If your task requires interacting with the Django admin, you might want to create a superuser.  
 ```bash  
 docker compose exec web python manage.py createsuperuser  
 ```  
 Follow the prompts to set up a username, email, and password.  
   
-6. **Access the application (optional now automated with Docker):**  
+6. **(OPTIONAL) Access the application (optional now automated with Docker):**  
 Run the following command to start the Django development server:  
 ```bash  
 docker compose exec web python manage.py runserver  
 ```  
 The Django application should now be running and accessible in your web browser at:  
-[http://localhost:8000](http://localhost:8000)  
-  
-If you created a superuser, the Django admin will be at [http://localhost:8000/admin/](http://localhost:8000/admin/).  
+- [http://localhost:8000](http://localhost:8000)
+- The Swagger UI is available at: [http://localhost:8000/swagger/](http://localhost:8000/swagger/)
+- If you created a superuser, the Django admin will be at [http://localhost:8000/admin/](http://localhost:8000/admin/).
   
 7. **Run tests:**  
 You can run the test suite with the following command:  
