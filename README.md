@@ -63,6 +63,9 @@ DJANGO_SUPERUSER_EXTERNAL_ID=super_user_id_123
 # Django secret key (use a strong, random value in production!)
 DJANGO_SECRET_KEY=django-insecure-y&rw4%_p*-znsjrr=e=-w!%=kw-tu9%2dv4jl+a3%0rs7w3k0m
 
+# A separate, strong, randomly generated secret for signing JWTs.
+JWT_SIGNING_KEY=your-separate-super-secret-jwt-key-goes-here
+
 # Debug mode (set to False in production)
 DJANGO_DEBUG=True
 ```  
