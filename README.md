@@ -68,6 +68,9 @@ JWT_SIGNING_KEY=your-separate-super-secret-jwt-key-goes-here
 
 # Debug mode (set to False in production)
 DJANGO_DEBUG=True
+
+# Allowed hosts for production (e.g., "yourdomain.com,api.yourdomain.com")
+ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0
 ```  
   
 3. **Build and run the Docker containers:**  
